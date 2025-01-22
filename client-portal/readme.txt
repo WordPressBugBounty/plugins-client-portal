@@ -3,8 +3,8 @@ Contributors: cozmoslabs, madalin.ungureanu, sareiodata
 Donate link: http://www.cozmoslabs.com/
 Tags: client portal, private user page, private pages, private content, private client page, user restricted content
 Requires at least: 3.1
-Tested up to: 6.1.1
-Stable tag: 1.1.9
+Tested up to: 6.7.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,10 @@ You can then use the [wppb-login] shortcode in the same page as the [client-port
 4. The Settings Page for the Plugin: screenshot-3.jpg
 
 == Changelog ==
+= 1.1.9 =
+* Fix: A PHP warning appearing in some cases
+* Added a new filter: cp_redirect_private_pages_capability
+
 = 1.1.9 =
 * Fix: CSRF issue with Generate Private Pages option. Thanks to Rio Darmawan
 * Fix: A PHP warning appearing in some cases

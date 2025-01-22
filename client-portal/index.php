@@ -3,7 +3,7 @@
  * Plugin Name: Client Portal
  * Plugin URI: http://www.cozmoslabs.com/
  * Description:  Build a company site with a client portal where clients login and see a restricted-access, personalized page of content with links and downloads.
- * Version: 1.1.9
+ * Version: 1.2.0
  * Author: Cozmoslabs, Madalin Ungureanu, Antohe Cristian
  * Author URI: http://www.cozmoslabs.com
  * Text Domain: client-portal
@@ -40,7 +40,7 @@ class CL_Client_Portal
     function __construct()
     {
         $this->slug = 'cp-options';
-        $this->options = get_option( $this->slug );
+        $this->options = get_option( $this->slug, array() );
         $this->defaults = array(
                                 'page-slug' => 'private-page',
                                 'support-comments' => 'no',
@@ -276,7 +276,7 @@ class CL_Client_Portal
         if( !isset( $this->options['redirect-private-pages'] ) || $this->options['redirect-private-pages'] == 'no' )
             return;
 
-        if( current_user_can( 'manage_options' ) )
+        if( current_user_can( apply_filters( 'cp_redirect_private_pages_capability', 'manage_options' ) ) )
             return;
 
         global $post;
