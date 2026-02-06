@@ -3,7 +3,7 @@
  * Plugin Name: Client Portal
  * Plugin URI: http://www.cozmoslabs.com/
  * Description:  Build a company site with a client portal where clients login and see a restricted-access, personalized page of content with links and downloads.
- * Version: 1.2.0
+ * Version: 1.2.2
  * Author: Cozmoslabs, Madalin Ungureanu, Antohe Cristian
  * Author URI: http://www.cozmoslabs.com
  * Text Domain: client-portal
@@ -39,18 +39,16 @@ class CL_Client_Portal
 
     function __construct()
     {
-        $this->slug = 'cp-options';
-        $this->options = get_option( $this->slug, array() );
+        $this->slug     = 'cp-options';
+        $this->options  = get_option( $this->slug, array() );
         $this->defaults = array(
-                                'page-slug' => 'private-page',
-                                'support-comments' => 'no',
-                                'restricted-message' => __( 'You do not have permission to view this page.', 'client-portal' ),
-                                'portal-log-in-message' => __( 'Please log in in order to access the client portal.', 'client-portal' ),
-                                'above-page-content' => '',
-                                'default-page-content' => '',
-                                'below-page-content' => '',
-                                'redirect-private-pages' => 'yes',
-                                );
+            'page-slug'              => 'private-page',
+            'support-comments'       => 'no',
+            'above-page-content'     => '',
+            'default-page-content'   => '',
+            'below-page-content'     => '',
+            'redirect-private-pages' => 'yes',
+        );
 
         /* register the post type */
         add_action( 'init', array( $this, 'cp_create_post_type' ) );
@@ -75,6 +73,7 @@ class CL_Client_Portal
 
         /* add bulk action to create private user pages */
         add_filter( 'admin_footer-users.php', array( $this, 'cp_create_private_page_bulk_actions' ) );
+        add_action( 'restrict_manage_users', array( $this, 'cp_add_bulk_action_nonce' ) );
         add_action( 'admin_action_create_private_page', array( $this, 'cp_create_private_pages_in_bulk' ) );
 
         /* create client portal extra information */
@@ -191,6 +190,10 @@ class CL_Client_Portal
             $args['supports'][] = 'comments';
 
         register_post_type( 'private-page', $args );
+
+        // set defaults for restriction messages
+        $this->defaults['restricted-message']     = __( 'You do not have permission to view this page.', 'client-portal' );
+        $this->defaults['portal-log-in-message']  = __( 'Please log in in order to access the client portal.', 'client-portal' );
     }
 
     /**
@@ -928,15 +931,30 @@ class CL_Client_Portal
     }
 
     /**
+     * Function that adds nonce field to the Users table form for bulk actions
+     */
+    function cp_add_bulk_action_nonce(){
+        wp_nonce_field( 'cp_create_private_page_bulk_actions', 'cp_create_private_page_nonce' );
+    }
+
+    /**
      * Function that creates a private page for the selected users in the bulk action
      */
     function cp_create_private_pages_in_bulk(){
+
+        if( !isset( $_REQUEST['cp_create_private_page_nonce'] ) || !wp_verify_nonce( sanitize_text_field( $_REQUEST['cp_create_private_page_nonce'] ), 'cp_create_private_page_bulk_actions' ) )
+            return;
+
+        if( !current_user_can( 'edit_users' ) )
+            return;
+
         if ( !empty( $_REQUEST['users'] ) && is_array( $_REQUEST['users'] ) ) {
             $users = array_map( 'absint', $_REQUEST['users'] );
             foreach( $users as $user_id ){
                 $this->cp_create_private_page( $user_id );
             }
         }
+
     }
 
     /**
@@ -970,4 +988,8 @@ class CL_Client_Portal
 
 }
 
-$CP_Object = new CL_Client_Portal();
+
+add_action( 'plugins_loaded', 'cp_load_plugin' );
+function cp_load_plugin() {
+    $CP_Object = new CL_Client_Portal();
+}
